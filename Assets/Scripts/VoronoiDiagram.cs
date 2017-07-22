@@ -247,7 +247,7 @@ public class VoronoiDiagram : MonoBehaviour {
 			}
 			numOceanPlates++;
 
-			// Create bi-drectional mappings between sections and plates.
+			// Create bi-directional mappings between sections and plates.
 			this.plateMetadata.Add(sectionSite, plate);
 			plate.Sections.Add(sectionSite);
 			this.plates.Add(plate);
@@ -313,7 +313,7 @@ public class VoronoiDiagram : MonoBehaviour {
 				Quaternion.identity).gameObject;
 			go.transform.SetParent(gameObject.transform);
 			Cell cellObject = go.GetComponent(typeof(Cell)) as Cell;
-			cellObject.Site = site;
+			cellObject.SetSite(site);
 			sectionData.CellObject = cellObject;
 
 			// Create new meshes for each cell object.
@@ -334,7 +334,7 @@ public class VoronoiDiagram : MonoBehaviour {
 	}
 
 	// Set the stresses on plate boundaries.
-	public void CalculateStress() {
+	private void CalculateStress() {
 		foreach (KeyValuePair<Edge, Boundary> kv in this.plateBoundaries) {
 			Edge edge = kv.Key;
 
@@ -365,7 +365,7 @@ public class VoronoiDiagram : MonoBehaviour {
 	}
 
 	// Simulates tectonic uplift based on plate boundary stress conditions.
-	public void CreateUplift() {
+	private void CreateUplift() {
 		Dictionary<Site, float> initialSites = new Dictionary<Site, float>();
 
 		foreach (KeyValuePair<Edge, Boundary> kv in this.plateBoundaries) {
@@ -422,7 +422,7 @@ public class VoronoiDiagram : MonoBehaviour {
 	}
 
 	// Elevation generation testing function.
-	public void GenerateCentralBlob() {
+	private void GenerateCentralBlob() {
 		Dictionary<Site, float> initialSites = new Dictionary<Site, float>();
 
 		// Get section closest to the center of the map.
@@ -434,11 +434,11 @@ public class VoronoiDiagram : MonoBehaviour {
 		float height = 1.0f;
 		initialSites.Add(centerSite, height);
 
-		GenerateElevation(initialSites);
+		GenerateElevation(initialSites, true);
 	}
 
 	// Elevation generation testing function.
-	public void GenerateRandomBlobs(int n) {
+	private void GenerateRandomBlobs(int n) {
 		Dictionary<Site, float> initialSites = new Dictionary<Site, float>();
 
 		int siteCount = this.SectionDiagram.Sites.Count;
@@ -458,10 +458,10 @@ public class VoronoiDiagram : MonoBehaviour {
 			} while (!initialSites.ContainsKey(site));
 		}
 
-		GenerateElevation(initialSites);
+		GenerateElevation(initialSites, true);
 	}
 
-	public void GenerateElevation(Dictionary<Site, float> initialSiteElevations, bool pointElevation = false) {
+	private void GenerateElevation(Dictionary<Site, float> initialSiteElevations, bool pointElevation = false) {
 		float elevationCutoff = 0.01f;
 
 		Queue<Site> updateSites = new Queue<Site>();
@@ -496,13 +496,13 @@ public class VoronoiDiagram : MonoBehaviour {
 				queuedSites.TryGetValue(neighborSite, out alreadyQueued);
 				if (!alreadyQueued) {
 					// Generate perturbed elevations based on parent elevation.
-					float density = neighborPlate.Density;
+					float range = neighborPlate.Density;
 					float perturbation;
 					if (pointElevation) {
 						// Constant elevation decay rate primarily for testing.
-						perturbation = 0.85f;
+						perturbation = 0.95f;
 					} else {
-						perturbation = (float)randGen.NextDouble() * density + 1.1f - density;
+						perturbation = (float)randGen.NextDouble() * range + 1.1f - range;
 					}
 					float neighborHeight = newElevation * perturbation;
 
@@ -524,7 +524,7 @@ public class VoronoiDiagram : MonoBehaviour {
 		}
 	}
 
-	public void RenderElevation(bool displayAll = false) {
+	private void RenderElevation(bool displayAll = false) {
 		// Set background to base color for display mode.
 		Renderer mapRenderer = gameObject.GetComponent<Renderer>();
 		if (this.spectralMode == (int)spectralModes.Color) {
@@ -579,7 +579,7 @@ public class VoronoiDiagram : MonoBehaviour {
 		DrawCoastline();
 	}
 
-	public void RenderPlates(bool displayAll = false) {
+	private void RenderPlates(bool displayAll = false) {
 		foreach (TectonicPlate plate in this.plates) {
 			foreach (Site sectionSite in plate.Sections) {
 				Section sectionData = this.sectionMetadata[sectionSite];
@@ -709,7 +709,7 @@ public class VoronoiDiagram : MonoBehaviour {
 		}
 	}
 
-	private void ClearScreen() {
+	public void ClearScreen() {
 		// Turn off rendering for each section, then clear the list of active objects.
 		foreach (Cell cellObject in this.activeCells) {
 			Renderer rend = cellObject.GetComponent<Renderer>();
@@ -743,7 +743,7 @@ public class VoronoiDiagram : MonoBehaviour {
 		}
 	}
 
-	public Site GetClosestSection(Vector2f point) {
+	private Site GetClosestSection(Vector2f point) {
 		List<Site> sites = this.SectionDiagram.Sites;
 		int siteCount = sites.Count;
 		float minDistSq = float.PositiveInfinity;
