@@ -222,11 +222,11 @@ public class VoronoiDiagram : MonoBehaviour {
 		int numOceanPlates = 0; // Counter for number of oceanic plates generated.
 		foreach (Vector2f seed in seeds) {
 			// Select a random section to be a plate spawn point.
-			Site sectionSite = GetClosestSection(seed);
+			Site sectionSite = this.GetClosestSection(this.SectionDiagram, seed);
 
 			// Select a different section if the one we picked is already in the list.
 			while (this.plateMetadata.ContainsKey(sectionSite)) {
-				sectionSite = GetClosestSection(this.CreateRandomPoints(1)[0]);
+				sectionSite = this.GetClosestSection(this.SectionDiagram, this.CreateRandomPoints(1)[0]);
 			}
 
 			TectonicPlate plate = new TectonicPlate();
@@ -427,7 +427,7 @@ public class VoronoiDiagram : MonoBehaviour {
 
 		// Get section closest to the center of the map.
 		Vector2f mapCenter = new Vector2f(this.Width * 0.5f, this.Height * 0.5f);
-		Site centerSite = GetClosestSection(mapCenter);
+		Site centerSite = this.GetClosestSection(this.SectionDiagram, mapCenter);
 
 		// Create initial elevation and load elevation seeding site into queue.
 		//float height = (float)randGen.NextDouble() * (1.0f - this.sealevel) + this.sealevel;
@@ -743,8 +743,8 @@ public class VoronoiDiagram : MonoBehaviour {
 		}
 	}
 
-	private Site GetClosestSection(Vector2f point) {
-		List<Site> sites = this.SectionDiagram.Sites;
+	private Site GetClosestSection(Voronoi diagram, Vector2f point) {
+		List<Site> sites = diagram.Sites;
 		int siteCount = sites.Count;
 		float minDistSq = float.PositiveInfinity;
 		Site closestSite = null;
