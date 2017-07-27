@@ -834,32 +834,8 @@ public class VoronoiDiagram : MonoBehaviour {
 		meshCollider.sharedMesh = cmesh;
 	}
 
-	// Determines whether a point is inside the polygon formed by the given vertices.
-	// Assumes the vertices form a convex polygon.
-	private bool Inside(Vector2f point, List<Vector2f> vertices) {
-		int n_vertices = vertices.Count;
-		int low = 0;
-		int high = n_vertices;
-
-		do {
-			int mid = (low + high) / 2;
-
-			if (TriangleIsCCW(vertices[0], vertices[mid], point)) {
-				low = mid;
-			} else {
-				high = mid;
-			}
-		} while (low + 1 < high);
-
-		if (low == 0 || high == n_vertices) {
-			return false;
-		}
-
-		return TriangleIsCCW(vertices[low], vertices[high], point);
-	}
-
 	// Determines whether or not a set of three points is in counter-clockwise order.
-	private bool TriangleIsCCW(Vector2f a, Vector2f b, Vector2f c) {
+	private static bool TriangleIsCCW(Vector2f a, Vector2f b, Vector2f c) {
 		float det = ((a.x - c.x) * (b.y - c.y)) - ((a.y - c.y) * (b.x - c.x));
 
 		if (det > 0) {
