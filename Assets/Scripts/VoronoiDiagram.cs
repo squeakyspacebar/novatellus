@@ -543,8 +543,10 @@ public class VoronoiDiagram : MonoBehaviour {
                 // Only update the mesh if necessary.
                 if (sectionData.NeedUpdate) {
                     // Convert cell vertices to local coordinates for the mesh.
-                    List<Vector3> meshVertices = this.GetMeshVertices(cellObject, sectionSite.Region(this.bounds));
-                    this.Triangulate(cellObject, meshVertices);
+                    List<Vector3> meshVertices = this.GetMeshVertices(cellObject,
+                        sectionSite.Region(this.bounds));
+                    int[] meshTriangles = this.Triangulate(meshVertices);
+                    this.UpdateMeshes(cellObject, meshVertices, meshTriangles);
                     sectionData.NeedUpdate = false;
                 }
 
@@ -590,8 +592,10 @@ public class VoronoiDiagram : MonoBehaviour {
                     // Only update the mesh if necessary.
                     if (sectionData.NeedUpdate) {
                         // Convert cell vertices to local coordinates for the mesh.
-                        List<Vector3> meshVertices = this.GetMeshVertices(cellObject, sectionSite.Region(this.bounds));
-                        this.Triangulate(cellObject, meshVertices);
+                        List<Vector3> meshVertices = this.GetMeshVertices(cellObject,
+                            sectionSite.Region(this.bounds));
+                        int[] meshTriangles = this.Triangulate(meshVertices);
+                        this.UpdateMeshes(cellObject, meshVertices, meshTriangles);
 
                         sectionData.NeedUpdate = false;
                     }
@@ -800,19 +804,37 @@ public class VoronoiDiagram : MonoBehaviour {
         return meshVertices;
     }
 
-    // Creates the mesh triangle array from a set of given vertices and updates the meshes of the given object.
-    // Assumes the vertices are already ordered and in local coordinates.
-    private void Triangulate(Cell cellObject, List<Vector3> meshVertices) {
+    /**
+     * Creates a triangle array for a mesh from a set of given vertices. Assumes the vertices are
+     * already ordered and in local coordinates.
+     *
+     * @param meshVertices A list of vertices to calculate the triangles for.
+     * @return An array of ordered vertex indices representing triangles.
+     */
+    private int[] Triangulate(List<Vector3> meshVertices) {
+        int numVertices = meshVertices.Count;
+
         // Calculate triangle indices.
         List<int> indices = new List<int>();
-        for (int i = 0; i < meshVertices.Count - 2; i++) {
+        for (int i = 0; i < numVertices - 2; i++) {
             indices.Add(0);
             indices.Add(i + 1);
             indices.Add(i + 2);
         }
-        indices.Reverse();
-        int[] meshTriangles = indices.ToArray();
 
+        // Reverse winding order to flip mesh facings.
+        indices.Reverse();
+        return indices.ToArray();
+    }
+
+    /**
+     * Updates the meshes of the given game object.
+     *
+     * @param cellObject Cell game object to set meshes for.
+     * @param meshVertices Vertices to create mesh from.
+     * @param meshTriangles Array of indices to be interpreted as triangles.
+     */
+    private void UpdateMeshes(Cell cellObject, List<Vector3> meshVertices, int[] meshTriangles) {
         // Refresh display mesh.
         MeshFilter meshFilter = cellObject.GetComponent<MeshFilter>();
         Mesh mesh = meshFilter.sharedMesh;
